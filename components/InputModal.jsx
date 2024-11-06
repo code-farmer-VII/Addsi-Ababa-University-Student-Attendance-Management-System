@@ -1,13 +1,26 @@
-import React, {useContext} from 'react'
+import React, {useContext, useState} from 'react'
 import { Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Modal from 'react-native-modal';
 import { AttendanceContext } from '../hook/context';
 import { router } from 'expo-router';
-
+import { getAssignedStudentsWithAttendance } from '../db/Auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { saveExcelFile } from '../xlFileManuplation/SaveFile';
 
 export const InputModal=()=>{
-    const { isInputModal, toggleInputModal, section, setSection, courseCode, setCourseCode } = useContext(AttendanceContext)
-    const RedirectToSection = () => {
+    const { isInputModal, toggleInputModal } = useContext(AttendanceContext)
+    const [section, setSection] = useState('')
+    const [courseCode, setCourseCode] = useState('')
+
+
+    const RedirectToSection = async () => {
+      const userId = await AsyncStorage.getItem("userId");
+      const fileName = courseCode + "/`" + setSection ;
+        const response = await getAssignedStudentsWithAttendance(userId,section, courseCode)
+        if(response){
+         await saveExcelFile(response, fileName)
+        }
+        console.log(userId,section, courseCode)
         router.push("/attendance")
         toggleInputModal()
         }

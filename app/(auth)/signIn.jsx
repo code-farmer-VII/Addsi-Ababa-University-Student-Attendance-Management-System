@@ -23,7 +23,7 @@ const SignIn = () => {
         console.log("error message", err);
       }
     };
-    // checkLoginStatus();
+    checkLoginStatus();
   }, []);
 const handleSignIn = async () => {
   logInWithEmail(email, password).then(response => {

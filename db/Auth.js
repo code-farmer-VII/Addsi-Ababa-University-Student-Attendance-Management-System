@@ -171,7 +171,7 @@ export async function registerAndAssignStudent(teacherId, studentInfo) {
           .eq('teacher_id', teacherId)
           .eq('student_id', registeredStudent.student_id)
           .single();
-
+       console.log(registeredStudent.student_id)
       // Step 4: If not assigned, create an assignment for the teacher
       if (assignmentError || !existingAssignment) {
           const { error: createAssignmentError } = await supabase
@@ -300,5 +300,68 @@ export async function getStudentInfoByStudent_id(teacherId, studentSchoolId) {
     } catch (error) {
         console.error("Error retrieving student information:", error.message);
         throw new Error(error.message || "Could not retrieve student information");
+    }
+}
+
+
+
+export async function getAssignedStudentsWithAttendance(teacherId, section,courseCode) {
+    try {
+        // Step 1: Retrieve students assigned to the teacher in the specified section
+        const { data: assignedStudents, error: assignedStudentsError } = await supabase
+            .from('Teacher_Student_Assignments')
+            .select(`
+                student_id,
+                Students (
+                    student_school_id,
+                    name,
+                    section,
+                    department,
+                    qr_code,
+                    course_code
+                )
+            `)
+            .eq('teacher_id', teacherId)
+            .eq('Students.section', section)
+            .eq('Students.course_code', courseCode);
+
+        if (assignedStudentsError) {
+            throw assignedStudentsError;
+        }
+
+        // Extract student IDs for attendance querying
+        const studentIds = assignedStudents.map((record) => record.student_id);
+
+        // Step 2: Count attendance for each student
+        const { data: attendanceCounts, error: attendanceCountsError } = await supabase
+            .from('Attendance')
+            .select(`
+                student_id,
+                count:attendance_id
+            `, { count: 'exact' })
+            .eq('teacher_id', teacherId)
+            .in('student_id', studentIds)
+            .group('student_id');
+
+        if (attendanceCountsError) {
+            throw attendanceCountsError;
+        }
+
+        // Create a map for attendance counts
+        const attendanceMap = attendanceCounts.reduce((map, attendance) => {
+            map[attendance.student_id] = attendance.count;
+            return map;
+        }, {});
+
+        // Map attendance counts to the assigned students
+        const studentsWithAttendance = assignedStudents.map((record) => ({
+            ...record.Students,
+            attendanceCount: attendanceMap[record.student_id] || 0
+        }));
+
+        return studentsWithAttendance;
+    } catch (error) {
+        console.error("Error retrieving assigned students with attendance:", error);
+        throw new Error("Could not retrieve assigned students with attendance");
     }
 }

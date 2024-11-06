@@ -8,7 +8,6 @@ const StudentAttendance = () => {
   const {studentInfo, attendance} = singleInfoData
 
 
-
   return (
     <View className="flex-1 p-4 bg-white">
       <ScrollView 

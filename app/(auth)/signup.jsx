@@ -25,47 +25,74 @@ const SignUp = () => {
         console.log("error message", err);
       }
     };
-    // checkLoginStatus();
+    checkLoginStatus();
   }, []);
 
   const handleSignUp = async () => {
-    if (!email || !password) {
+    // Ensure all input fields are filled
+    if (!email || !password || !username) {
       console.log('Please fill in all fields');
-      return;
+      return; 
     }
   
-    // const { data, error } = await supabase.auth.signUp({
-    //   email,
-    //   password,
-    // });
-
-    const { data, error } = await signUpWithEmail(email, password)
+    try {
+      // Sign up the user with Supabase authentication
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
   
-    if (error) {
-      console.error('Sign-up error:', error.message);
-      return { error: error.message };
+      // Check for sign-up error
+      if (error) {
+        console.error('Sign-up error:', error.message);
+        // Optionally, show this error to the user in the UI
+        return { error: error.message };
+      }
+  
+      // Check if a session was created (e.g., user needs to verify email)
+      if (!data.user) {
+        console.log('Sign-up succeeded. Please check your email to verify your account.');
+        return; // Optionally, inform the user to check their email
+      }
+  
+      // Retrieve necessary session data
+      const userId = data.user.id; // The auth ID provided by Supabase
+      const accessToken = data.session?.access_token; // The access token from Supabase
+      const userEmail = data.user.email; // The email the user signed up with
+   console.log("userId: ", userId);
+   console.log("accessToken: ", accessToken);
+   await AsyncStorage.setItem("userId", userId);
+   console.log("userEmail: ", userEmail);
+      const { data: teacherData, error: teacherError } = await supabase
+        .from('Teachers') 
+        .insert([{id: userId, email: email, name: username, auth_id: userId }]);
+  
+      if (teacherError) {
+        console.error('Error adding teacher:', teacherError);
+        return; 
+      }
+  
+      console.log('Teacher added successfully:', teacherData);
+  
+      // Store access token and user details securely in AsyncStorage
+      if (accessToken) {
+        await AsyncStorage.setItem('accessToken', accessToken);
+        await AsyncStorage.setItem('userId', userId);
+        await AsyncStorage.setItem('userEmail', userEmail);
+      }
+  
+      // Navigate to the attendance screen upon successful registration
+      router.push('/attendance');
+  
+      // Return the user object if needed
+      return { user: data.user };
+    } catch (err) {
+      // Catch and log any unexpected errors
+      console.error('Unexpected error during sign-up:', err.message);
     }
-  
-    const session = data.session;
-    const userId = session.user.id;
-    const accessToken = session.access_token;
-    const userEmail = session.user.email;
-
-
-  
-    const { data: teacherData, error: teacherError } = await RegisterTeacher(userId, userEmail, username);
-
-    if (teacherError) {
-      console.error('Error adding teacher:');
-    } else {
-      console.log('Teacher added successfully:');
-    }
-    AsyncStorage.setItem("accessToken", accessToken);
-    AsyncStorage.setItem("userId", userId);
-    AsyncStorage.setItem("userEmail", userEmail);
-    router.push('/attendance')
-    return { user: data.user };
   };
+  
+  
 
   return (
     <View className="flex-1 justify-center items-center bg-blue-700">

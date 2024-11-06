@@ -1,7 +1,13 @@
-import { Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import { AttendanceProvider } from '../hook/context';
+import { Text, TouchableOpacity } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Layout() {
+  const handleLogout = async () => {
+    await AsyncStorage.removeItem('accessToken');
+    router.canGoBack();
+  }
   return (
     <AttendanceProvider>
       <Stack
@@ -29,13 +35,26 @@ export default function Layout() {
           headerShown: false, 
         }}
       />
-        <Stack.Screen name="attendance" options={{
-          headerTitle: 'Attendance App',
-          headerStyle: {
-            backgroundColor: 'blue',
-          },
-          headerTitleAlign: 'center',
-        }} />
+<Stack.Screen
+  name="attendance"
+  options={{
+    headerTitle: 'Attendance App',
+    headerStyle: {
+      backgroundColor: 'blue',
+    },
+    headerTitleAlign: 'center',
+    headerRight:() => (
+      <TouchableOpacity
+        onPress={handleLogout}
+        style={{
+          marginRight: 10,
+        }}
+      >
+        <Text style={{ color: 'white' }}>Logout</Text>
+      </TouchableOpacity>
+    ),
+  }}
+/>
           <Stack.Screen name="home" options={{
           headerTitle: 'Home',
           headerStyle: {
