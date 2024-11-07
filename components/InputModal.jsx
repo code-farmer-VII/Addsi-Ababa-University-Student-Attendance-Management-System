@@ -15,8 +15,16 @@ export const InputModal=()=>{
 
     const RedirectToSection = async () => {
       const userId = await AsyncStorage.getItem("userId");
-      const fileName = courseCode + "/`" + setSection ;
+      // console.log("***************")
+      // console.log(userId)
+      // console.log(courseCode)
+      // console.log(section)
+      // console.log("***************")
+
+      const fileName = courseCode + "/`" + setSection + ".xlsx";
         const response = await getAssignedStudentsWithAttendance(userId,section, courseCode)
+        console.log("this is the student DATA " , response)
+
         if(response){
          await saveExcelFile(response, fileName)
         }

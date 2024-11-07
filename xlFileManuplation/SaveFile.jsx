@@ -1,6 +1,7 @@
 import * as FileSystem from 'expo-file-system';
 import * as XLSX from 'xlsx';
 import * as Sharing from 'expo-sharing';
+import { Buffer } from 'buffer';
 
 export const saveExcelFile = async (data, fileName) => {
   try {
@@ -13,9 +14,15 @@ export const saveExcelFile = async (data, fileName) => {
     const excelBinary = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
     const base64Excel = Buffer.from(excelBinary, 'binary').toString('base64');
 
+    // Ensure that the file name is valid and simple
+    const sanitizedFileName = fileName.replace(/[^\w\s.-]/g, '') + '.xlsx';
+
     // Save the file to the device's document directory
     const documentDirectory = FileSystem.documentDirectory;
-    const newFileUri = documentDirectory + fileName;
+    const newFileUri = documentDirectory + sanitizedFileName;
+
+    console.log("Saving file at path: ", newFileUri); // Debugging log
+
     await FileSystem.writeAsStringAsync(newFileUri, base64Excel, {
       encoding: FileSystem.EncodingType.Base64,
     });
@@ -42,27 +49,3 @@ const shareFile = async (fileUri) => {
     console.error('Error sharing file:', error);
   }
 };
-
-// Example usage
-const data = [
-    {
-        student_school_id: "12345",
-        name: "John Doe",
-        section: "A",
-        department: "Science",
-        qr_code: "sample_qr_code",
-        attendanceCount: 10
-    },
-    {
-        student_school_id: "67890",
-        name: "Jane Smith",
-        section: "A",
-        department: "Math",
-        qr_code: "another_qr_code",
-        attendanceCount: 8
-    },
-    // Additional student objects...
-];
-
-// Call the function to save and share the file
-saveExcelFile(data, 'students_with_attendance.xlsx');

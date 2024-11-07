@@ -305,14 +305,14 @@ export async function getStudentInfoByStudent_id(teacherId, studentSchoolId) {
 
 
 
-export async function getAssignedStudentsWithAttendance(teacherId, section,courseCode) {
+export async function getAssignedStudentsWithAttendance(teacherId, section, courseCode) {
     try {
         // Step 1: Retrieve students assigned to the teacher in the specified section
         const { data: assignedStudents, error: assignedStudentsError } = await supabase
             .from('Teacher_Student_Assignments')
             .select(`
                 student_id,
-                Students (
+                Students:student_id ( 
                     student_school_id,
                     name,
                     section,
@@ -329,39 +329,41 @@ export async function getAssignedStudentsWithAttendance(teacherId, section,cours
             throw assignedStudentsError;
         }
 
+        // Filter out records where 'Students' data is null
+        const filteredAssignedStudents = assignedStudents.filter(student => student.Students !== null);
+
         // Extract student IDs for attendance querying
-        const studentIds = assignedStudents.map((record) => record.student_id);
+        const studentIds = filteredAssignedStudents.map(record => record.student_id);
 
-        // Step 2: Count attendance for each student
-        const { data: attendanceCounts, error: attendanceCountsError } = await supabase
+        // Step 2: Count attendance for each student without using `.group()`
+        const { data: attendanceData, error: attendanceDataError } = await supabase
             .from('Attendance')
-            .select(`
-                student_id,
-                count:attendance_id
-            `, { count: 'exact' })
+            .select('student_id, attendance_id')
             .eq('teacher_id', teacherId)
-            .in('student_id', studentIds)
-            .group('student_id');
+            .in('student_id', studentIds);
 
-        if (attendanceCountsError) {
-            throw attendanceCountsError;
+        if (attendanceDataError) {
+            throw attendanceDataError;
         }
 
-        // Create a map for attendance counts
-        const attendanceMap = attendanceCounts.reduce((map, attendance) => {
-            map[attendance.student_id] = attendance.count;
+        // Group and count attendance on the client side
+        const attendanceCounts = attendanceData.reduce((map, record) => {
+            map[record.student_id] = (map[record.student_id] || 0) + 1;
             return map;
         }, {});
 
         // Map attendance counts to the assigned students
-        const studentsWithAttendance = assignedStudents.map((record) => ({
+        const studentsWithAttendance = filteredAssignedStudents.map(record => ({
             ...record.Students,
-            attendanceCount: attendanceMap[record.student_id] || 0
+            attendanceCount: attendanceCounts[record.student_id] || 0
         }));
 
+        console.log("******************************", studentsWithAttendance);
         return studentsWithAttendance;
     } catch (error) {
         console.error("Error retrieving assigned students with attendance:", error);
         throw new Error("Could not retrieve assigned students with attendance");
     }
 }
+
+

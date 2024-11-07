@@ -50,11 +50,13 @@ export const ReadExcelFile = async (fileUri) => {
         const students = cleanedData.map(item => ({
             student_school_id: item[0]?.toString() || '',
             name: item[1] || '',
-            section: item[2] || '',
-            department: item[3] || '',
+            department: item[2] || '',
+            section: item[3] || '',
             qr_code: item[4] || '',
             course_code: item[5] || '' // Assuming this is at index 5
         }));
+
+
 
         return students;
     } catch (error) {

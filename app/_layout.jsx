@@ -5,8 +5,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Layout() {
   const handleLogout = async () => {
+    const token = await AsyncStorage.getItem('accessToken');
     await AsyncStorage.removeItem('accessToken');
-    router.canGoBack();
+    console.log('Logout successful');
+    router.push("/")
   }
   return (
     <AttendanceProvider>
