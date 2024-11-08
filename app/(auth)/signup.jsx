@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, Button, StatusBar } from 'react-native';
+import { View, Text, TextInput, Button, StatusBar, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { Link } from 'expo-router';
@@ -13,6 +13,7 @@ const SignUp = () => {
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     const checkLoginStatus = async () => {
@@ -20,7 +21,7 @@ const SignUp = () => {
         const token = await AsyncStorage.getItem("accessToken");
 
         if (token) {
-          router.push("/attendance")
+          router.push("/attendance");
         }
       } catch (err) {
         console.log("error message", err);
@@ -30,79 +31,61 @@ const SignUp = () => {
   }, []);
 
   const handleSignUp = async () => {
-    setError("")
-    // Ensure all input fields are filled
+    setError("");
     if (!email || !password || !username) {
       setError('Please fill in all fields');
-      return; 
+      return;
     }
-  
+
     try {
-      // Sign up the user with Supabase authentication
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
       });
-  
-      // Check for sign-up error
+
       if (error) {
-        // console.log('Sign-up error:', error.message);
         setError(error.message);
-        // Optionally, show this error to the user in the UI
         return { error: error.message };
       }
-  
-      // // Check if a session was created (e.g., user needs to verify email)
-      // if (!data.user) {
-      //   console.log('Sign-up succeeded. Please check your email to verify your account.');
-      //   return; // Optionally, inform the user to check their email
-      // }
-  
-      // Retrieve necessary session data
-      const userId = data.user.id; // The auth ID provided by Supabase
-      const accessToken = data.session?.access_token; // The access token from Supabase
-      const userEmail = data.user.email; // The email the user signed up with
+
+      const userId = data.user.id;
+      const accessToken = data.session?.access_token;
+      const userEmail = data.user.email;
       console.log("userId: ", userId);
       console.log("accessToken: ", accessToken);
       await AsyncStorage.setItem("userId", userId);
       console.log("userEmail: ", userEmail);
       const { data: teacherData, error: teacherError } = await supabase
-        .from('Teachers') 
-        .insert([{id: userId, email: email, name: username, auth_id: userId }]);
-  
+        .from('Teachers')
+        .insert([{ id: userId, email: email, name: username, auth_id: userId }]);
+
       if (teacherError) {
         console.error('Error adding teacher:', teacherError);
-        return; 
+        return;
       }
-  
+
       console.log('Teacher added successfully:', teacherData);
-  
-      // Store access token and user details securely in AsyncStorage
+
       if (accessToken) {
         await AsyncStorage.setItem('accessToken', accessToken);
         await AsyncStorage.setItem('userId', userId);
         await AsyncStorage.setItem('userEmail', userEmail);
       }
-  
-      // Navigate to the attendance screen upon successful registration
+
       router.push('/attendance');
-  
-      // Return the user object if needed
+
       return { user: data.user };
     } catch (err) {
-      // Catch and log any unexpected errors
       setError(err.message);
     }
   };
-  
-  
 
   return (
     <View className="flex-1 justify-center items-center bg-white">
       <Text className="text-Red text-3xl font-semibold mb-6">Sign Up</Text>
 
       <View className="flex-row items-center bg-white border-2 border-red-600 w-3/4 p-4 mb-4 rounded-lg shadow">
-      <Icon name="user" size={20} color="#999" className="mr-3 ml-3" />
+        <Icon name="user" size={20} color="#999" className="mr-3 ml-3" />
 
         <TextInput
           placeholder="Enter your full name"
@@ -113,7 +96,7 @@ const SignUp = () => {
         />
       </View>
       <View className="flex-row items-center bg-white border-2 border-red-600 w-3/4 p-4 mb-4 rounded-lg shadow">
-      <Icon name="envelope" size={20} color="#999" className="mr-3 ml-3" />
+        <Icon name="envelope" size={20} color="#999" className="mr-3 ml-3" />
 
         <TextInput
           placeholder="Email"
@@ -127,32 +110,34 @@ const SignUp = () => {
       </View>
 
       <View className="flex-row items-center bg-white border-2 border-red-600 w-3/4 p-4 mb-6 rounded-lg shadow">
-      <Icon name="lock" size={20} color="#999" className="mr-3 ml-3" />
+        <Icon name="lock" size={20} color="#999" className="mr-3 ml-3" />
         <TextInput
           placeholder="Password"
           value={password}
           onChangeText={setPassword}
-          secureTextEntry
+          secureTextEntry={!showPassword}
           className="flex-1 border-l-2 border-gray-300 ml-2 pl-2"
           placeholderTextColor="#999"
         />
+        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+          <Icon name={showPassword ? "eye" : "eye-slash"} size={20} color="#999" />
+        </TouchableOpacity>
       </View>
-    {
-      error && (
+      {error && (
         <View>
           <Text className="text-red text-sm">{error}</Text>
         </View>
-      )
-    }
+      )}
       <View className="w-3/4">
         <Button title="Sign Up" onPress={handleSignUp} color="red" />
       </View>
       <View className="flex my-5 flex-row">
         <Text className="text-gray-500 text-sm">if you have an account you can</Text>
-        <Link href={'/(auth)/signIn'} className='text-red-500 px-3'><Text className="text-blue-500 px-4 underline underline-offset-2">signin here</Text></Link>
+        <Link href={'/(auth)/signIn'} className='text-red-500 px-3'>
+          <Text className="text-blue-500 px-4 underline underline-offset-2">sign in here</Text>
+        </Link>
       </View>
-      <StatusBar barStyle="light-content" backgroundColor={'red'}/>
-
+      <StatusBar barStyle="light-content" backgroundColor={'red'} />
     </View>
   );
 };

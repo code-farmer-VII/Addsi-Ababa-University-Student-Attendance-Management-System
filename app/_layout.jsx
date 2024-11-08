@@ -7,6 +7,8 @@ export default function Layout() {
   const handleLogout = async () => {
     const token = await AsyncStorage.getItem('accessToken');
     await AsyncStorage.removeItem('accessToken');
+    await AsyncStorage.removeItem('userId');
+    await AsyncStorage.removeItem('userEmail');
     console.log('Logout successful');
     router.push("/")
   }
@@ -52,7 +54,7 @@ export default function Layout() {
           marginRight: 10,
         }}
       >
-        <Text style={{ color: 'white' }}>Logout</Text>
+        <Text style={{ color: 'white', padding: 10, borderRadius: 10, borderWidth: 1, borderColor: "red"  }}>Logout</Text>
       </TouchableOpacity>
     ),
   }}

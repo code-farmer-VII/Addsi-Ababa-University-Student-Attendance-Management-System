@@ -5,6 +5,7 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { AttendanceContext } from '../hook/context';
 import { registerAndAssignStudent } from '../db/Auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useCameraPermissions } from 'expo-camera';
 
 
 function StudentForm() {
@@ -14,6 +15,8 @@ function StudentForm() {
   const [department, setDepartment] = useState('');
   const { qrCode } = useContext(AttendanceContext);
   const [courseCode, setCourseCode] = useState('');
+  const [permission, requestPermission] = useCameraPermissions();
+
 
   const handleSubmit = async () => {
     if (!studentSchoolId || !fullName || !section || !department || !courseCode, !qrCode) {
@@ -38,6 +41,8 @@ function StudentForm() {
   };
 
   const QrcodeHandler = () => {
+      requestPermission();
+
     router.push("/registerQrCode");
   };
 
