@@ -306,6 +306,8 @@ export async function getStudentInfoByStudent_id(teacherId, studentSchoolId) {
 
 
 export async function getAssignedStudentsWithAttendance(teacherId, section, courseCode) {
+
+
     try {
         // Step 1: Retrieve students assigned to the teacher in the specified section
         const { data: assignedStudents, error: assignedStudentsError } = await supabase
@@ -329,8 +331,14 @@ export async function getAssignedStudentsWithAttendance(teacherId, section, cour
             throw assignedStudentsError;
         }
 
+
+
         // Filter out records where 'Students' data is null
         const filteredAssignedStudents = assignedStudents.filter(student => student.Students !== null);
+
+        console.log("=============================")
+        console.log(filteredAssignedStudents)
+        console.log("=============================")
 
         // Extract student IDs for attendance querying
         const studentIds = filteredAssignedStudents.map(record => record.student_id);
@@ -365,5 +373,71 @@ export async function getAssignedStudentsWithAttendance(teacherId, section, cour
         throw new Error("Could not retrieve assigned students with attendance");
     }
 }
+
+
+// export async function getAssignedStudentsWithAttendance(teacherId, section, courseCode) {
+//     try {
+//         // Step 1: Find the students by section and course code
+//         const { data: students, error: studentError } = await supabase
+//             .from('Students')
+//             .select('student_id, student_school_id, name, section, department, qr_code')
+//             .eq('section', section)
+//             .eq('qr_code', courseCode);
+    
+//         if (studentError || !students) {
+//             throw new Error("Students not found with the provided QR code and section.");
+//         }
+//         console.log("Found students:", students);
+    
+//         // Step 2: Retrieve student assignments and attendance data
+//         const studentsWithAttendance = await Promise.all(students.map(async (student) => {
+//             try {
+//                 // Check if the student is assigned to the teacher
+//                 const { data: assignment, error: assignmentError } = await supabase
+//                     .from('Teacher_Student_Assignments')
+//                     .select('student_id')
+//                     .eq('teacher_id', teacherId)
+//                     .eq('student_id', student.student_id)
+//                     .single();
+    
+//                 if (assignmentError || !assignment) {
+//                     console.log(`Student ${student.name} is not assigned to this teacher.`);
+//                     return null; // Skip this student
+//                 }
+    
+//                 // Retrieve the student's attendance records
+//                 const { data: attendanceData, error: attendanceError } = await supabase
+//                     .from('Attendance')
+//                     .select('student_id, attendance_id')
+//                     .eq('teacher_id', teacherId)
+//                     .in('student_id', [student.student_id]); // Use an array to support 'in' filter
+    
+//                 if (attendanceError) {
+//                     console.error(`Error fetching attendance for student ${student.name}:`, attendanceError);
+//                     return { ...student, attendanceCount: 0 }; // Return student with zero attendance count if error
+//                 }
+    
+//                 // Add attendance count to the student data
+//                 return {
+//                     ...student,
+//                     attendanceCount: attendanceData.length
+//                 };
+    
+//             } catch (error) {
+//                 console.error(`Error processing student ${student.name}:`, error);
+//                 return null;
+//             }
+//         }));
+    
+//         // Filter out any null results (in case some students were not assigned)
+//         const validStudentsWithAttendance = studentsWithAttendance.filter(student => student !== null);
+//         console.log("Final student data with attendance:", validStudentsWithAttendance);
+    
+//         return validStudentsWithAttendance;
+//     } catch (error) {
+//         console.error("Error retrieving assigned students with attendance:", error);
+//         throw new Error("Could not retrieve assigned students with attendance.");
+//     }
+// }
 
 
