@@ -13,7 +13,7 @@ function StudentForm() {
   const [fullName, setFullName] = useState('');
   const [section, setSection] = useState('');
   const [department, setDepartment] = useState('');
-  const { qrCode } = useContext(AttendanceContext);
+  const { qrCode , setQrCode} = useContext(AttendanceContext);
   const [courseCode, setCourseCode] = useState('');
   const [permission, requestPermission] = useCameraPermissions();
 
@@ -35,6 +35,7 @@ function StudentForm() {
       setSection('');
       setDepartment('');
       setCourseCode('');
+      setQrCode('');
     } catch (error) {
       Alert.alert('Registration Failed', error.message);  
     }
@@ -47,6 +48,7 @@ function StudentForm() {
   };
 
   const cancelHandler = () => {
+    setQrCode('');
     setStudentSchoolId('');
     setFullName('');
     setSection('');

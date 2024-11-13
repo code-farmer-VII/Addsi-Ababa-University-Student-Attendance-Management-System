@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import Modal from 'react-native-modal';
 import { AttendanceContext } from '../hook/context';
 import { PickDocument } from '../xlFileManuplation/DocumentPicker';
@@ -46,9 +46,11 @@ const BottomSheet = ({ visible, onClose }) => {
 
             const userId = await AsyncStorage.getItem("userId");
             if (userId) {
-              await registerAndAssignStudents(userId, data)
-                .then(response => console.log("Response:", response))
+               await registerAndAssignStudents(userId, data)
+                .then(Alert.alert("Registration Successful", "Students registered successfully."))
                 .catch(error => console.error("Error during registration:", error));
+
+                
             } else {
               console.error("User ID not found in AsyncStorage.");
             }

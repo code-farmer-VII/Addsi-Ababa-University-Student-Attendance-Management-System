@@ -72,7 +72,7 @@ const SignUp = () => {
         await AsyncStorage.setItem('userEmail', userEmail);
       }
 
-      router.push('/attendance');
+       router.push('/attendance');
 
       return { user: data.user };
     } catch (err) {
