@@ -56,7 +56,7 @@ A mobile application built for **Addis Ababa University** to streamline student 
 
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/your-username/student-attendance-management.git
+   git clone https://github.com/code-farmer-VII/Addsi-Ababa-University-Student-Attendance-Management-System
    cd student-attendance-management
    ```
 
